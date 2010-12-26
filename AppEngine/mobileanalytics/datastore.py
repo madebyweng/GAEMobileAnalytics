@@ -41,11 +41,20 @@ from google.appengine.ext import db
 class MobileDevice(db.Model):
 	device_id = db.StringProperty()
 	device_model = db.StringProperty()
+	device_country = db.StringProperty()
+	device_size = db.StringProperty()
+	device_jb = db.BooleanProperty()
 	os = db.StringProperty()
 	os_ver = db.StringProperty()
 	app_ver = db.StringProperty()
+	app_id = db.StringProperty()
+	app_name = db.StringProperty()
 	manufacturer = db.StringProperty()
 	telco = db.StringProperty()
+	user_ip = db.StringProperty()
+	total = db.IntegerProperty()
+	cracked = db.BooleanProperty()
+	reques_date = db.DateTimeProperty(auto_now=True)
 	date = db.DateTimeProperty(auto_now_add=True)
 	
 # this record is kept for x number of days. records older than x number of days are then purged
@@ -53,6 +62,12 @@ class MobileDevice(db.Model):
 class DailyMobileDeviceAccess(db.Model):
 	total = db.IntegerProperty()
 	device_id = db.StringProperty()
+	device_model = db.StringProperty()
+	device_country = db.StringProperty()
+	device_size = db.StringProperty()
+	device_jb = db.BooleanProperty()
+	app_id = db.StringProperty()
+	cracked = db.BooleanProperty()
 	date = db.DateProperty(auto_now_add=True)
 
 #
@@ -62,11 +77,20 @@ class DailyMobileDeviceAccess(db.Model):
 # this depends on MobileDevices. Check that the device_id does not already exist in MobileDevices before incrementing the total here
 # for daily, weekly, and monthly display new users, by OS, by OS version
 class DailyNewUsers(db.Model):
+	device_id = db.StringProperty()
+	device_model = db.StringProperty()
+	device_country = db.StringProperty()
+	device_size = db.StringProperty()
+	device_jb = db.BooleanProperty()
 	total = db.IntegerProperty()
 	date = db.DateProperty(auto_now_add=True)
 	os = db.StringProperty()
 	os_ver = db.StringProperty()
 	app_ver = db.StringProperty()
+	app_id = db.StringProperty()
+	app_name = db.StringProperty()
+	user_ip = db.StringProperty()
+	cracked = db.BooleanProperty()
 	
 # no dependency on table, just increment when users exit the app (with duration included)
 # this is use for daily, weekly, and monthly display, by OS, by OS version
@@ -75,7 +99,10 @@ class DailySessions(db.Model):
 	date = db.DateProperty(auto_now_add=True)
 	os = db.StringProperty()
 	os_ver = db.StringProperty()
+	device_id = db.StringProperty()
+	app_id = db.StringProperty()
 	app_ver = db.StringProperty()
+	app_name = db.StringProperty()
 	duration = db.IntegerProperty()
 	
 # this depends on DailyMobileDeviceAccess. If record does not already exists in the record for that particular day, increment the total
@@ -86,6 +113,8 @@ class DailyUniqueUsersSession(db.Model):
 	os = db.StringProperty()
 	os_ver = db.StringProperty()
 	app_ver = db.StringProperty()
+	app_id = db.StringProperty()
+	app_name = db.StringProperty()
 	
 # this depends on DailyMobileDeviceAccess. 
 # this table is updated with a cronjob every x hours determined by developers
@@ -96,6 +125,8 @@ class AccessFrequency(db.Model):
 	os = db.StringProperty()
 	os_ver = db.StringProperty()
 	app_ver = db.StringProperty()
+	app_id = db.StringProperty()
+	app_name = db.StringProperty()
 
 # no dependency on other tables
 # developer specify the event name, and the key-value pair associated with this
@@ -112,6 +143,8 @@ class Events(db.Model):
 	os = db.StringProperty()
 	os_ver = db.StringProperty()
 	app_ver = db.StringProperty()
+	app_id = db.StringProperty()
+	app_name = db.StringProperty()
 	duration = db.IntegerProperty()
 	
 # no dependency on other tables
@@ -130,6 +163,8 @@ class NonDiscreetEvents(db.Model):
 	os = db.StringProperty()
 	os_ver = db.StringProperty()
 	app_ver = db.StringProperty()
+	app_id = db.StringProperty()
+	app_name = db.StringProperty()
 	duration = db.IntegerProperty()
 	
 	

@@ -31,6 +31,11 @@
  * 
  */
 
+
+#define BaseURL			@"http://localhost:8083/log"
+#define BaseEventsURL	@"http://localhost:8083/log/event"
+
+
 #import <Foundation/Foundation.h>
 
 
@@ -45,6 +50,7 @@
 @property (nonatomic, retain) NSString *apiKey, *secretKey;
 @property (nonatomic, retain) NSString *basicAnalyticsRecordUrl, *eventsAnalyticsRecordUrl;
 
+- (id)initWithApiKey:(NSString*)_apiKey;
 - (id)initWithApiKey:(NSString*)_apiKey baseUrl:(NSString*)basicUrl eventsUrl:(NSString*)eventsUrl;
 - (void)logEvent:(NSString*)eventName parameters:(NSMutableDictionary*)parameters discreet:(BOOL)discreet;
 

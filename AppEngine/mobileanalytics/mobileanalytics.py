@@ -35,11 +35,14 @@ from google.appengine.ext import webapp
 from google.appengine.ext.webapp import util
 import mobileanalytics
 from django.utils import simplejson
-from google.appengine.api.labs import taskqueue
+from google.appengine.api import taskqueue
 
 class MainHandler(webapp.RequestHandler):
     def get(self):
-        self.response.out.write('Hello world!')
+    	client_ip = self.request.remote_addr 
+    	request = self.request
+        self.response.out.write('Client ip = ')
+        self.response.out.write(request.remote_addr + "<br>")
 
 class QueueRecordAnalytics(webapp.RequestHandler):
 	def post(self):
@@ -47,13 +50,16 @@ class QueueRecordAnalytics(webapp.RequestHandler):
 		os = self.request.get("os")
 		os_ver = self.request.get("os_ver")
 		app_ver = self.request.get("app_ver")
+		app_id = self.request.get("app_id")
+		app_name = self.request.get("app_name")
 		device_model = self.request.get("device_model")
 		manufacturer = self.request.get("manufacturer")
 		telco = self.request.get("telco")
 		t = self.request.get("t")
 		s = self.request.get("s")
+		request = self.request
 		
-		analytics = mobileanalytics.RecordAnalytics(device_id, os, os_ver, app_ver, time=t, secret_key=s)
+		analytics = mobileanalytics.RecordAnalytics(device_id, os, os_ver, app_ver, app_id, request, time=t, secret_key=s)
 		analytics.onApplicationStarted(device_model, manufacturer, telco=telco)
 
 class RecordAnalytics(webapp.RequestHandler):
@@ -96,15 +102,19 @@ class RecordAnalytics(webapp.RequestHandler):
 			os = self.request.get("os")
 			os_ver = self.request.get("os_ver")
 			app_ver = self.request.get("app_ver")
+			app_id = self.request.get("app_id")
+			app_name = self.request.get("app_name")
 			device_model = self.request.get("device_model")
 			manufacturer = self.request.get("manufacturer")
 			telco = self.request.get("telco")
 			t = self.request.get("t")
 			s = self.request.get("s")
+			p = self.request.remote_addr
+			request = self.request
 			
-			analytics = mobileanalytics.RecordAnalytics(device_id, os, os_ver, app_ver, time=t, secret_key=s)
+			analytics = mobileanalytics.RecordAnalytics(device_id, os, os_ver, app_ver, app_id, request, time=t, secret_key=s)
 			if analytics.allowLogging:
-				taskqueue.add(url=mobileanalytics.config.record_queue_path, params={'device_id': device_id, 'os':os, 'os_ver':os_ver, 'app_ver':app_ver, 'device_model':device_model, 'manufacturer':manufacturer, 'telco':telco, 't':t, 's':s})	
+				taskqueue.add(url=mobileanalytics.config.record_queue_path, params={'device_id': device_id, 'os':os, 'os_ver':os_ver, 'app_ver':app_ver, 'app_id':app_id, 'device_model':device_model, 'manufacturer':manufacturer, 'telco':telco, 't':t, 's':s})	
 
 class QueueRecordAnalyticsDiscreetEvent(webapp.RequestHandler):
 	def post(self):
@@ -112,13 +122,16 @@ class QueueRecordAnalyticsDiscreetEvent(webapp.RequestHandler):
 		os = self.request.get("os")
 		os_ver = self.request.get("os_ver")
 		app_ver = self.request.get("app_ver")
+		app_id = self.request.get("app_id")
+		app_name = self.request.get("app_name")
 		event = self.request.get("event")
 		parameters = self.request.get("parameters")
 		t = self.request.get("t")
 		s = self.request.get("s")
+		request = self.request
 		obj = simplejson.loads(parameters)
 		
-		analytics = mobileanalytics.RecordAnalytics(device_id, os, os_ver, app_ver, time=t, secret_key=s)
+		analytics = mobileanalytics.RecordAnalytics(device_id, os, os_ver, app_ver, app_id, request, time=t, secret_key=s)
 		analytics.recordEvent(event, obj, 1)
 
 class GetAnalyticsChartForNonDiscreetEvents(webapp.RequestHandler):
@@ -187,16 +200,20 @@ class RecordAnalyticsEvent(webapp.RequestHandler):
 			os = self.request.get("os")
 			os_ver = self.request.get("os_ver")
 			app_ver = self.request.get("app_ver")
+			app_id = self.request.get("app_id")
+			app_name = self.request.get("app_name")
 			event = self.request.get("event")
 			parameters = self.request.get("parameters")
 			t = self.request.get("t")
 			s = self.request.get("s")
+			request = self.request
+        	
 			if self.request.get("is_discreet")=='':
 				is_discreet = 1
 			else:
 				is_discreet = int(self.request.get("is_discreet"))
 				
-			analytics = mobileanalytics.RecordAnalytics(device_id, os, os_ver, app_ver, time=t, secret_key=s)
+			analytics = mobileanalytics.RecordAnalytics(device_id, os, os_ver, app_ver, app_id, request, time=t, secret_key=s)
 			if analytics.allowLogging:
 				if is_discreet:
 					taskqueue.add(url=mobileanalytics.config.record_event_queue_path, params={'device_id': device_id, 'os':os, 'os_ver':os_ver, 'app_ver':app_ver, 'event':event, 'parameters':parameters, 't':t, 's':s})
@@ -209,13 +226,16 @@ class QueueRecordAnalyticsNonDiscreetEvent(webapp.RequestHandler):
 		os = self.request.get("os")
 		os_ver = self.request.get("os_ver")
 		app_ver = self.request.get("app_ver")
+		app_id = self.request.get("app_id")
+		app_name = self.request.get("app_name")
 		event = self.request.get("event")
 		parameters = self.request.get("parameters")
 		t = self.request.get("t")
 		s = self.request.get("s")
+		request = self.request
 		obj = simplejson.loads(parameters)
 		
-		analytics = mobileanalytics.RecordAnalytics(device_id, os, os_ver, app_ver, time=t, secret_key=s)
+		analytics = mobileanalytics.RecordAnalytics(device_id, os, os_ver, app_ver, app_id, request, time=t, secret_key=s)
 		analytics.recordEvent(event, obj, 0)
 
 class GetAnalyticsChart(webapp.RequestHandler):

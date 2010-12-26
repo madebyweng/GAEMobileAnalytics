@@ -43,6 +43,9 @@ from django.utils import simplejson
 import datetime
 from datetime import date
 from datetime import timedelta
+#from datetime import datetime
+#from datetime.datetime import today
+
 import config
 import hashlib
 
@@ -217,7 +220,7 @@ class DisplayAnalytics(object):
 		if len(paramKeys)>0:
 			paramKey = None
 		
-		osVers = []
+		osVer = []
 		if osVer!=None:
 			osVers = osVer.split(',')
 		if len(osVers)>0:
@@ -232,10 +235,10 @@ class DisplayAnalytics(object):
 			query += "AND param_value<%s " % maxX
 		if osVer:
 			query += "AND os_ver='%s' " % osVer
-			
+
 		query += "ORDER BY param_value"
 		events = db.GqlQuery(query)
-		 
+		
 		"""
 		if paramKey==None:
 			if minX==None and maxX==None:
@@ -255,7 +258,7 @@ class DisplayAnalytics(object):
 				events = db.GqlQuery("SELECT * FROM StalkerNonDiscreetEvents WHERE event_name=:event_name AND param_key=:param_key AND param_value<:max_x ORDER BY param_value", event_name=eventName, param_key=paramKey, max_x=maxX)
 			else:
 				events = db.GqlQuery("SELECT * FROM StalkerNonDiscreetEvents WHERE event_name=:event_name AND param_key=:param_key AND param_value>:min_x ORDER BY param_value", event_name=eventName, param_key=paramKey, min_x=minX)
-		"""	
+		"""
 		
 		all_x_values = []
 		for event in events:
@@ -265,7 +268,7 @@ class DisplayAnalytics(object):
 					should_add = True
 			else:
 				should_add = True
-			
+
 			if should_add:
 				should_add = False
 				if len(osVers)>0:
@@ -275,7 +278,7 @@ class DisplayAnalytics(object):
 					should_add = True
 				if should_add:
 					all_x_values.append(event.param_value)
-					
+
 		if minX==None:
 			start_x = min(all_x_values)
 		else:
@@ -284,13 +287,13 @@ class DisplayAnalytics(object):
 		upper_limit = lower_limit + xSize
 		chl_list = []
 		y_values = []
-		
+
 		for x_value in all_x_values:
 			if len(y_values)==0:
 				y_values.append(0)
 				mid_point = "%s" % (int((lower_limit+upper_limit)/2))
 				chl_list.append(mid_point)
-			
+
 			if x_value <= upper_limit:
 				y_values[-1] = y_values[-1] + 1
 			else:
@@ -304,14 +307,14 @@ class DisplayAnalytics(object):
 					if chl_list[-1]!=mid_point:
 						chl_list.append(mid_point)
 				y_values.append(1)
-				
+
 			mid_point = "%s" % (int((lower_limit+upper_limit)/2))
 			if chl_list[-1]!=mid_point:
 				chl_list.append(mid_point)
 
 		if len(y_values)==0:
 			return "no data yet"
-	
+
 		chart_url = self.getLineChartURL(chl_list, y_values, width, height)
 		chart_data = "<img src='%s'/>" % chart_url
 		return chart_data
@@ -613,11 +616,22 @@ class DisplayAnalytics(object):
 		return data
 
 class RecordAnalytics(object):
-	def __init__(self, device_id, os, os_ver, app_ver, time=None, secret_key=None):
-		self.device_id = device_id
-		self.os = os
-		self.os_ver = os_ver
-		self.app_ver = app_ver
+	def __init__(self, device_id, os, os_ver, app_ver, app_id, request, time=None, secret_key=None):
+		self.os = request.get("os")
+		self.os_ver = request.get("os_ver")
+		self.app_id = request.get("app_id")
+		self.app_ver = request.get("app_ver")
+		self.app_name = request.get("app_name")
+		self.device_country = request.get("device_country")
+		self.device_id = request.get("device_id")
+		self.device_language = request.get("device_language")
+		self.device_memory = request.get("device_memory")
+		self.device_model = request.get("device_model")
+		self.device_size = request.get("device_size")
+		self.device_jb = request.get("device_jb")
+		self.locale_country = request.get("locale_country")
+		self.user_ip = request.remote_addr
+		self.cracked = request.get("cracked")
 		if time!=None:
 			self.time = time
 		if secret_key!=None:
@@ -625,7 +639,7 @@ class RecordAnalytics(object):
 
 	def incrementDailyNewUser(self):
 		today = datetime.date.today()
-		records = db.GqlQuery("SELECT * FROM DailyNewUsers WHERE date=DATETIME(:year, :month, :day, 0, 0, 0) AND os=:os AND os_ver=:os_ver AND app_ver=:app_ver", year=today.year, month=today.month, day=today.day, os=self.os, os_ver=self.os_ver, app_ver=self.app_ver)
+		records = db.GqlQuery("SELECT * FROM DailyNewUsers WHERE date=DATETIME(:year, :month, :day, 0, 0, 0) AND device_id=:device_id AND app_id=:app_id", year=today.year, month=today.month, day=today.day, device_id=self.device_id, app_id=self.app_id)
 		count = 0
 		for record in records:
 			count += 1
@@ -636,31 +650,62 @@ class RecordAnalytics(object):
 			user.total = 1
 			user.os = self.os
 			user.os_ver = self.os_ver
+			user.device_id = self.device_id
+			user.device_model = self.device_model
+			user.device_country = self.device_country
+			user.device_size = self.device_size
+			user.device_jb = False
+			if self.device_jb==1:
+				record.device_jb = True
+			user.app_id = self.app_id
 			user.app_ver = self.app_ver
+			user.app_name = self.app_name
+			user.user_ip = self.user_ip
+			user.cracked = False
+			if self.cracked==1:
+				user.cracked = True
 			user.put()
+			
 		
 	def recordDeviceIfRequired(self, device_model, manufacturer, telco=None):
-		records = db.GqlQuery("SELECT * FROM MobileDevice WHERE device_id='%s'" % self.device_id)
+		records = db.GqlQuery("SELECT * FROM MobileDevice WHERE device_id=:device_id AND app_id=:app_id", device_id=self.device_id, app_id=self.app_id)
 		count = 0
 		for record in records:
 			count += 1
-			record.os = self.os
 			record.os_ver = self.os_ver
+			record.device_country = self.device_country
+			record.device_jb = False
+			if self.device_jb==1:
+				record.device_jb = True
 			record.app_ver = self.app_ver
-			record.device_model = device_model
-			record.manufacturer = manufacturer
+			record.app_name = self.app_name
 			record.telco = telco
+			record.total = record.total + 1
+			#record.reques_date = datetime.datetime
 			record.put()
 		if count==0:
-			
 			device = MobileDevice()
 			device.device_id = self.device_id
+			device.device_model = self.device_model
+			device.device_country = self.device_country
+			device.device_size = self.device_size
+			device.device_jb = False
+			if self.device_jb==1:
+				device.device_jb = True
 			device.os = self.os
 			device.os_ver = self.os_ver
 			device.app_ver = self.app_ver
-			device.device_model = device_model
+			device.app_id = self.app_id
+			device.app_name = self.app_name
+			device.device_model = self.device_model
 			device.manufacturer = manufacturer
 			device.telco = telco
+			device.user_ip = self.user_ip
+			device.total = 1
+			#device.reques_date = datetime.datetime
+			device.cracked = False
+			if self.cracked==1:
+				device.cracked = True
 			device.put()
 			
 			self.incrementDailyNewUser()
@@ -668,9 +713,9 @@ class RecordAnalytics(object):
 	def recordSingleEvent(self, event_name, param_key, param_value, is_discreet,duration=None):
 		today = datetime.date.today()
 		if is_discreet:
-			records = db.GqlQuery("SELECT * FROM Events WHERE date=DATETIME(:year, :month, :day, 0, 0, 0) AND os=:os AND os_ver=:os_ver AND param_key=:param_key AND param_value=:param_value AND app_ver=:app_ver AND event_name=:event_name", year=today.year, month=today.month, day=today.day, os=self.os, os_ver=self.os_ver, param_key=param_key, param_value=param_value, app_ver=self.app_ver, event_name=event_name)
+			records = db.GqlQuery("SELECT * FROM Events WHERE date=DATETIME(:year, :month, :day, 0, 0, 0) AND os=:os AND os_ver=:os_ver AND param_key=:param_key AND param_value=:param_value AND app_ver=:app_ver AND app_id=:app_id AND event_name=:event_name", year=today.year, month=today.month, day=today.day, os=self.os, os_ver=self.os_ver, param_key=param_key, param_value=param_value, app_ver=self.app_ver, app_id=self.app_id, event_name=event_name)
 		else:
-			records = db.GqlQuery("SELECT * FROM NonDiscreetEvents WHERE date=DATETIME(:year, :month, :day, 0, 0, 0) AND os=:os AND os_ver=:os_ver AND param_key=:param_key AND param_value=:param_value AND app_ver=:app_ver AND event_name=:event_name", year=today.year, month=today.month, day=today.day, os=self.os, os_ver=self.os_ver, param_key=param_key, param_value=float(param_value), app_ver=self.app_ver, event_name=event_name)
+			records = db.GqlQuery("SELECT * FROM NonDiscreetEvents WHERE date=DATETIME(:year, :month, :day, 0, 0, 0) AND os=:os AND os_ver=:os_ver AND param_key=:param_key AND param_value=:param_value AND app_ver=:app_ver AND app_id=:app_id AND event_name=:event_name", year=today.year, month=today.month, day=today.day, os=self.os, os_ver=self.os_ver, param_key=param_key, param_value=float(param_value), app_ver=self.app_ver, app_id=self.app_id, event_name=event_name)
 		count = 0
 		
 		for record in records:
@@ -691,6 +736,8 @@ class RecordAnalytics(object):
 				event.os = self.os
 				event.os_ver = self.os_ver
 				event.app_ver = self.app_ver
+				event.app_id = self.app_id
+				event.app_name = self.app_name
 				event.put()
 			except:
 				pass
@@ -704,7 +751,8 @@ class RecordAnalytics(object):
 				self.recordSingleEvent(event_name, key, parameters[key], is_discreet, duration=duration)
 
 	def recordAccess(self):
-		records = db.GqlQuery("SELECT * FROM DailyMobileDeviceAccess WHERE device_id='%s'" % self.device_id)
+		records = db.GqlQuery("SELECT * FROM DailyMobileDeviceAccess WHERE device_id=:device_id AND app_id=:app_id", device_id=self.device_id, app_id=self.app_id)
+		#records = db.GqlQuery("SELECT * FROM DailyMobileDeviceAccess WHERE app_id=:app_id", app_id=self.app_id)
 		count = 0
 		for record in records:
 			count += 1
@@ -713,12 +761,22 @@ class RecordAnalytics(object):
 		if count==0:
 			dailyMobileDeviceAccess = DailyMobileDeviceAccess()
 			dailyMobileDeviceAccess.device_id = self.device_id
+			dailyMobileDeviceAccess.device_model = self.device_model
+			dailyMobileDeviceAccess.device_country = self.device_country
+			dailyMobileDeviceAccess.device_size = self.device_size
+			dailyMobileDeviceAccess.device_jb = False
+			if self.device_jb==1:
+				dailyMobileDeviceAccess.device_jb = True
+			dailyMobileDeviceAccess.app_id = self.app_id
 			dailyMobileDeviceAccess.total = 1;
+			dailyMobileDeviceAccess.cracked = False
+			if self.cracked==1:
+				dailyMobileDeviceAccess.cracked = True
 			dailyMobileDeviceAccess.put()
 	
 	def incrementSession(self):
 		today = datetime.date.today()
-		records = db.GqlQuery("SELECT * FROM DailySessions WHERE date=DATETIME(:year, :month, :day) AND os=:os AND os_ver=:os_ver AND app_ver=:app_ver", year=today.year, month=today.month, day=today.day, os=self.os, os_ver=self.os_ver, app_ver=self.app_ver)
+		records = db.GqlQuery("SELECT * FROM DailySessions WHERE date=DATETIME(:year, :month, :day) AND app_id=:app_id AND device_id=:device_id", year=today.year, month=today.month, day=today.day, app_id=self.app_id, device_id=self.device_id)
 		count = 0
 		for record in records:
 			count += 1
@@ -729,7 +787,10 @@ class RecordAnalytics(object):
 			session.total = 1
 			session.os = self.os
 			session.os_ver = self.os_ver
-			session.app_ver = self.app_ver
+			session.device_id = self.device_id
+			session.app_id = self.app_id
+			session.app_ver = self.app_ver			
+			session.app_name = self.app_name
 			session.put()
 	
 	def onApplicationExited(self, duration):

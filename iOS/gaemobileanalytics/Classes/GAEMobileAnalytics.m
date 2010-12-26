@@ -37,6 +37,17 @@
 #import <CoreTelephony/CTCarrier.h>
 #import "SBJSON.h"
 
+
+#include <sys/types.h>
+#include <sys/sysctl.h>
+#include <mach/mach.h>
+
+#define PATH_TO_APT 		@"/private/var/lib/apt/"
+#define GAM_APP_NAME		[[[NSBundle mainBundle] infoDictionary] objectForKey:(NSString*)kCFBundleNameKey]
+#define GAM_APP_VER			[[[NSBundle mainBundle] infoDictionary] objectForKey:(NSString*)kCFBundleVersionKey]
+#define GAM_APP_ID			[[[NSBundle mainBundle] infoDictionary] objectForKey:(NSString*)kCFBundleIdentifierKey]
+
+
 @interface GAEMobileAnalytics()
 - (void)postToUrl:(NSString*)baseUrl parameters:(NSMutableDictionary*)parameters;
 - (NSString*)getSHA256Hash:(NSString*)input;
@@ -46,6 +57,124 @@
 @synthesize apiKey, secretKey, basicAnalyticsRecordUrl, eventsAnalyticsRecordUrl;
 
 static GAEMobileAnalytics *defaultLogger = nil;
+
+
+/*!
+ @method getGlobalDeviceId
+ @abstract A unique device identifier is a hash value composed from various hardware identifiers such
+ as the device’s serial number. It is guaranteed to be unique for every device but cannot 
+ be tied to a user account. [UIDevice Class Reference]
+ @return An 1-way hashed identifier unique to this device.
+ */
+- (NSString *)getGlobalDeviceId {
+	NSString *systemId = [[UIDevice currentDevice] uniqueIdentifier];
+	if (systemId == nil) {
+		return nil;
+	}
+	return systemId;
+}
+
+/*!
+ @method getTimeAsDatetime
+ @abstract Gets the current time, along with local timezone, formatted as a DateTime for the webservice. 
+ @return a DateTime of the current local time and timezone.
+ */
+- (NSString *)getTimeAsDatetime {
+	NSDateFormatter *dateFormatter = [[[NSDateFormatter alloc] init] autorelease];
+	[dateFormatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ss-00:00"];
+	[dateFormatter setTimeZone:[NSTimeZone timeZoneWithAbbreviation:@"UTC"]];
+	return [dateFormatter stringFromDate:[NSDate date]];
+}
+
+/*!
+ @method isDeviceJailbroken
+ @abstract checks for the existance of apt to determine whether the user is running any
+ of the jailbroken app sources.
+ @return whether or not the device is jailbroken.
+ */
+- (BOOL) isDeviceJailbroken {
+	NSFileManager *sessionFileManager = [NSFileManager defaultManager];	
+	return [sessionFileManager fileExistsAtPath:PATH_TO_APT];
+}
+
+/*!
+ @method getDeviceModel
+ @abstract Gets the device model string. 
+ @return a platform string identifying the device
+ */
+- (NSString *)getDeviceModel {
+	char *buffer[256] = { 0 };
+	size_t size = sizeof(buffer);
+    sysctlbyname("hw.machine", buffer, &size, NULL, 0);
+    NSString *platform = [NSString stringWithCString:(const char*)buffer
+											encoding:NSUTF8StringEncoding];
+	return platform;
+}
+
+/*!
+ @method modelSizeString
+ @abstract Checks how much disk space is reported and uses that to determine the model
+ @return A string identifying the model, e.g. 8GB, 16GB, etc
+ */
+- (NSString *)modelSizeString {
+	
+#if TARGET_IPHONE_SIMULATOR
+	return @"SIMULATOR";
+#endif
+	
+	// User partition
+	NSArray *path = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    NSDictionary *stats = [[NSFileManager defaultManager] attributesOfFileSystemForPath:[path lastObject] error:nil];  
+	uint64_t user = [[stats objectForKey:NSFileSystemSize] longLongValue];
+	
+	// System partition
+	path = NSSearchPathForDirectoriesInDomains(NSApplicationDirectory, NSSystemDomainMask, YES);
+    stats = [[NSFileManager defaultManager] attributesOfFileSystemForPath:[path lastObject] error:nil];  
+	uint64_t system = [[stats objectForKey:NSFileSystemSize] longLongValue];
+	
+	// Add up and convert to gigabytes
+	// TODO: seem to be missing a system partiton or two...
+	NSInteger size = (user + system) >> 30;
+	
+	// Find nearest power of 2 (eg, 1,2,4,8,16,32,etc).  Over 64 and we return 0
+	for (NSInteger gig = 1; gig < 257; gig = gig << 1) {
+		if (size < gig)
+			return [NSString stringWithFormat:@"%dGB", gig];
+	}
+	return nil;
+}
+
+/*!
+ @method availableMemory
+ @abstract Reports how much memory is available  
+ @return A double containing the available free memory
+ */
+- (NSString*)availableMemory {
+	unsigned long long available = NSNotFound;
+	vm_statistics_data_t stats;
+	mach_msg_type_number_t count = HOST_VM_INFO_COUNT;
+	if (!host_statistics(mach_host_self(), HOST_VM_INFO, (host_info_t)&stats, &count))
+		available = vm_page_size * stats.free_count;
+	
+	//Kilobytes
+	double result = available / 1024;
+	
+	if (result > 1024)
+	{
+		//Megabytes
+		result = result / 1024;
+		
+		if (result > 1024)
+		{
+			//Gigabytes
+			result = result / 1024;
+			return [@"" stringByAppendingFormat:@"%3.1fGB", result];
+		}
+		return [@"" stringByAppendingFormat:@"%3.1fMB", result];
+	}
+	
+	return [@"" stringByAppendingFormat:@"%3.1fKB", result];
+}
 
 + (GAEMobileAnalytics *)defaultLogger
 {
@@ -97,16 +226,35 @@ static GAEMobileAnalytics *defaultLogger = nil;
 }
 
 - (void)dealloc {
+	[apiKey release];
+	[secretKey release];
+	[basicAnalyticsRecordUrl release];
+	[eventsAnalyticsRecordUrl release];
 	[super dealloc];
 }
 
-- (id)initWithApiKey:(NSString*)_apiKey baseUrl:(NSString*)basicUrl eventsUrl:(NSString*)eventsUrl
+- (id)initWithApiKey:(NSString*)_apiKey 
+{
+	if (self = [super init]) 
+	{
+		[self initWithApiKey:_apiKey baseUrl:nil eventsUrl:nil];
+	}
+	return self;
+}
+
+- (id)initWithApiKey:(NSString*)_apiKey baseUrl:(NSString*)baseUrl eventsUrl:(NSString*)eventsUrl
 {
 	if (self = [super init]) 
 	{
 		self.apiKey = _apiKey;
-		self.basicAnalyticsRecordUrl = basicUrl;
+		self.basicAnalyticsRecordUrl = baseUrl;
 		self.eventsAnalyticsRecordUrl = eventsUrl;
+		
+		if (baseUrl == nil)
+			self.basicAnalyticsRecordUrl = BaseURL;
+		
+		if (eventsUrl == nil)
+			self.eventsAnalyticsRecordUrl = BaseEventsURL;
 		
 		[self postToUrl:self.basicAnalyticsRecordUrl parameters:nil];
 	}
@@ -144,29 +292,55 @@ static GAEMobileAnalytics *defaultLogger = nil;
 		parameters = [NSMutableDictionary dictionary];
 	}
 	
+	UIDevice *device = [UIDevice currentDevice];
+	NSLocale *locale = [NSLocale currentLocale];
+	NSLocale *english = [[[NSLocale alloc] initWithLocaleIdentifier: @"en_US"] autorelease];
+	NSLocale *device_locale = [[NSLocale preferredLanguages] objectAtIndex:0];	
+    NSString *device_language = [english displayNameForKey:NSLocaleIdentifier value:device_locale];
+	NSString *locale_country = [english displayNameForKey:NSLocaleCountryCode value:[locale objectForKey:NSLocaleCountryCode]];		
+	
+	
 	[parameters setObject:[NSNumber numberWithInt:startTime] forKey:@"t"];
 	[parameters setObject:self.secretKey forKey:@"s"];
-	[parameters setObject:[[UIDevice currentDevice] uniqueIdentifier] forKey:@"device_id"];
-	[parameters setObject:[[UIDevice currentDevice] systemName] forKey:@"os"];
-	[parameters setObject:[[UIDevice currentDevice] systemVersion] forKey:@"os_ver"];
+
+	// Device
+	[parameters setObject:[device uniqueIdentifier] forKey:@"device_id"];
+	[parameters setObject:[NSString stringWithFormat:@"%d",[[NSNumber numberWithBool:[self isDeviceJailbroken]] intValue]] forKey:@"device_jb"];
+#if TARGET_IPHONE_SIMULATOR	
+	[parameters setObject:@"SIMULATOR" forKey:@"os"];
+#else
+	[parameters setObject:[device systemName] forKey:@"os"];
+#endif
+	[parameters setObject:[device systemVersion] forKey:@"os_ver"];
+	
+	
+	[parameters setObject:device_language forKey:@"device_language"];
+	[parameters setObject:locale_country forKey:@"locale_country"];
+	[parameters setObject:[locale objectForKey:NSLocaleCountryCode] forKey:@"device_country"];
+	[parameters setObject:[self getDeviceModel] forKey:@"device_model"];
+
 	[parameters setObject:@"Apple" forKey:@"manufacturer"];
+	[parameters setObject:[self availableMemory] forKey:@"device_memory"];
+	[parameters setObject:[self modelSizeString] forKey:@"device_size"];
 	
-	NSString *bundle_identifier = [[[NSBundle mainBundle] infoDictionary] objectForKey:(NSString*)kCFBundleIdentifierKey];
-	[parameters setObject:bundle_identifier forKey:@"app_id"];
-	
-	NSString *app_version = [[[NSBundle mainBundle] infoDictionary] objectForKey:(NSString*)kCFBundleVersionKey];
-	[parameters setObject:app_version forKey:@"app_ver"];
-	
-	NSString *app_name = [[[NSBundle mainBundle] infoDictionary] objectForKey:(NSString*)kCFBundleNameKey];
-	[parameters setObject:app_name forKey:@"app_name"];
-	
-	CTTelephonyNetworkInfo *telephony = [[CTTelephonyNetworkInfo alloc] init];
+	CTTelephonyNetworkInfo *telephony = [[[CTTelephonyNetworkInfo alloc] init] autorelease];
 	CTCarrier *carrier = [telephony subscriberCellularProvider];
 	
 	NSString *carrierName = [carrier carrierName];
-	if (carrierName==nil) carrierName = @"No Carrier Info";
+	if (carrierName==nil) carrierName = @"No Carrier";
 	carrierName = [carrierName stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
 	[parameters setObject:carrierName forKey:@"telco"];
+	
+	// App
+	[parameters setObject:GAM_APP_ID forKey:@"app_id"];
+	[parameters setObject:GAM_APP_VER forKey:@"app_ver"];
+	[parameters setObject:GAM_APP_NAME forKey:@"app_name"];
+
+	
+	NSLog(@"parameter = %@", parameters);
+//	NSHost* myhost =[NSHost currentHost];
+//	NSString *ad = [myhost address];
+//	NSLog(@"address = %@", ad);
 	
 	NSMutableURLRequest *request = [[[NSMutableURLRequest alloc] initWithURL:[NSURL URLWithString:baseUrl]
 																 cachePolicy:NSURLRequestReloadIgnoringLocalAndRemoteCacheData
@@ -188,8 +362,6 @@ static GAEMobileAnalytics *defaultLogger = nil;
 	[request setValue:postLength forHTTPHeaderField:@"Content-Length"];
 	[request setValue:@"application/x-www-form-urlencoded" forHTTPHeaderField:@"Content-Type"];
 	[request setHTTPBody:postData];
-	
-	//NSLog(@"%@", request);
 	
 	[[NSURLConnection alloc] initWithRequest:request delegate:nil];
 }
