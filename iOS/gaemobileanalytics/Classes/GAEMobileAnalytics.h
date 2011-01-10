@@ -32,26 +32,36 @@
  */
 
 
-#define BaseURL			@"http://localhost:8083/log"
-#define BaseEventsURL	@"http://localhost:8083/log/event"
-
-
 #import <Foundation/Foundation.h>
-
+#import <UIKit/UIKit.h>
+#import "GAEMAConstants.h"
 
 @interface GAEMobileAnalytics : NSObject {
-	NSString *apiKey, *secretKey;
+	NSString *apiKey;
+	NSString *secretKey;
 	int startTime;
-	NSString *basicAnalyticsRecordUrl, *eventsAnalyticsRecordUrl;
+	NSString *basicAnalyticsRecordURL;
+	NSString *eventsAnalyticsRecordURL;
 }
 
 + (GAEMobileAnalytics *)defaultLogger;
 
-@property (nonatomic, retain) NSString *apiKey, *secretKey;
-@property (nonatomic, retain) NSString *basicAnalyticsRecordUrl, *eventsAnalyticsRecordUrl;
+@property (nonatomic, retain) NSString *apiKey;
+@property (nonatomic, retain) NSString *secretKey;
+@property (nonatomic, retain) NSString *basicAnalyticsRecordURL;
+@property (nonatomic, retain) NSString *eventsAnalyticsRecordURL;
+@property (nonatomic, assign) BOOL runDebug;
 
+/*
+ [[GAEMobileAnalytics defaultLogger] initWithApiKey:GAEMA_BaseAPIKey];
+*/
 - (id)initWithApiKey:(NSString*)_apiKey;
+/*
+ [[GAEMobileAnalytics defaultLogger] initWithApiKey:GAEMA_BaseAPIKey baseUrl:@"http://localhost:8083/log" eventsUrl:@"http://localhost:8083/log/event"];
+ */
 - (id)initWithApiKey:(NSString*)_apiKey baseUrl:(NSString*)basicUrl eventsUrl:(NSString*)eventsUrl;
 - (void)logEvent:(NSString*)eventName parameters:(NSMutableDictionary*)parameters discreet:(BOOL)discreet;
+
+
 
 @end

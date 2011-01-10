@@ -33,6 +33,8 @@
 
 #import "gaemobileanalyticsAppDelegate.h"
 #import "GAEMobileAnalytics.h"
+#import "GAEMAConstants.h"
+
 
 @implementation gaemobileanalyticsAppDelegate
 
@@ -46,9 +48,10 @@
     
     // Override point for customization after application launch.
     
-	[[GAEMobileAnalytics defaultLogger] initWithApiKey:@"put-a-few-random-characters-here" baseUrl:@"http://localhost:8081/log" eventsUrl:@"http://localhost:8081/log/event"];
+	[[GAEMobileAnalytics defaultLogger] initWithApiKey:GAEMA_BaseAPIKey baseUrl:@"http://localhost:8083/log" eventsUrl:@"http://localhost:8083/log/event"];
+	//[[GAEMobileAnalytics defaultLogger] initWithApiKey:BaseAPIKey];
 	
-	
+	/*
 	NSMutableDictionary *parameters2 = [NSMutableDictionary dictionary];
 	[parameters2 setObject:@"B" forKey:@"title"];
 	[parameters2 setObject:@"a" forKey:@"subtitle"];
@@ -58,7 +61,7 @@
 	[parameters setObject:[NSNumber numberWithFloat:1000000.9] forKey:@"subtitle"];
 	[parameters setObject:[NSNumber numberWithFloat:102.12] forKey:@"title"];
 	[[GAEMobileAnalytics defaultLogger] logEvent:@"TEST" parameters:parameters discreet:NO];
-	
+	*/
     [self.window makeKeyAndVisible];
     
     return YES;
@@ -70,6 +73,8 @@
      Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
      Use this method to pause ongoing tasks, disable timers, and throttle down OpenGL ES frame rates. Games should use this method to pause the game.
      */
+	[[GAEMobileAnalytics defaultLogger] initWithApiKey:GAEMA_BaseAPIKey baseUrl:@"http://localhost:8083/log" eventsUrl:@"http://localhost:8083/log/event"];
+	//[[GAEMobileAnalytics defaultLogger] initWithApiKey:BaseAPIKey];
 }
 
 
