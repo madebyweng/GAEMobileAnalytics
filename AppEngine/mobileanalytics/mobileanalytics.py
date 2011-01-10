@@ -59,7 +59,7 @@ class QueueRecordAnalytics(webapp.RequestHandler):
 		s = self.request.get("s")
 		request = self.request
 		
-		analytics = mobileanalytics.RecordAnalytics(device_id, os, os_ver, app_ver, app_id, request, time=t, secret_key=s)
+		analytics = mobileanalytics.RecordAnalytics(request, time=t, secret_key=s)
 		analytics.onApplicationStarted(device_model, manufacturer, telco=telco)
 
 class RecordAnalytics(webapp.RequestHandler):
@@ -97,14 +97,22 @@ class RecordAnalytics(webapp.RequestHandler):
 		self.response.out.write(data + "<br>")
 		
 	def post(self):
-		device_id = self.request.get("device_id")
+		device_id = self.request.get("device_id")        
 		if device_id:
 			os = self.request.get("os")
 			os_ver = self.request.get("os_ver")
-			app_ver = self.request.get("app_ver")
 			app_id = self.request.get("app_id")
+			app_ver = self.request.get("app_ver")
 			app_name = self.request.get("app_name")
+			cracked = self.request.get("cracked")
+			device_country = self.request.get("device_country")
+			device_id = self.request.get("device_id")
+			device_jb = self.request.get("device_jb")
+			device_language = self.request.get("device_language")
+			device_memory = self.request.get("device_memory")
 			device_model = self.request.get("device_model")
+			device_size = self.request.get("device_size")
+			locale_country = self.request.get("locale_country")
 			manufacturer = self.request.get("manufacturer")
 			telco = self.request.get("telco")
 			t = self.request.get("t")
@@ -112,9 +120,34 @@ class RecordAnalytics(webapp.RequestHandler):
 			p = self.request.remote_addr
 			request = self.request
 			
-			analytics = mobileanalytics.RecordAnalytics(device_id, os, os_ver, app_ver, app_id, request, time=t, secret_key=s)
+			print '<br>' + p;
+        	#self.response.out.write('Client ip = ')
+        	#self.response.out.write(request.remote_addr + "<br>")
+			
+			analytics = mobileanalytics.RecordAnalytics(request, time=t, secret_key=s)
 			if analytics.allowLogging:
-				taskqueue.add(url=mobileanalytics.config.record_queue_path, params={'device_id': device_id, 'os':os, 'os_ver':os_ver, 'app_ver':app_ver, 'app_id':app_id, 'device_model':device_model, 'manufacturer':manufacturer, 'telco':telco, 't':t, 's':s})	
+				#taskqueue.add(url=mobileanalytics.config.record_queue_path, params=request)
+				taskqueue.add(url=mobileanalytics.config.record_queue_path, 
+				params={'device_id': device_id, 
+				'os':os, 
+				'os_ver':os_ver, 
+				'app_ver':app_ver, 
+				'app_id':app_id,
+				'app_name':app_name,
+				'cracked':cracked,
+				'device_country':device_country,
+				'device_id':device_id,
+				'device_jb':device_jb,
+				'device_language':device_language,
+				'device_memory':device_memory,
+				'device_model':device_model,
+				'device_size':device_size,
+				'locale_country':locale_country,
+				'manufacturer':manufacturer,
+				'telco':telco,
+				't':t,
+				's':s,
+				'remote_addr':p })
 
 class QueueRecordAnalyticsDiscreetEvent(webapp.RequestHandler):
 	def post(self):
