@@ -42,10 +42,6 @@
 #include <sys/sysctl.h>
 #include <mach/mach.h>
 
-#define PATH_TO_APT 		@"/private/var/lib/apt/"
-#define GAM_APP_NAME		[[[NSBundle mainBundle] infoDictionary] objectForKey:(NSString*)kCFBundleNameKey]
-#define GAM_APP_VER			[[[NSBundle mainBundle] infoDictionary] objectForKey:(NSString*)kCFBundleVersionKey]
-#define GAM_APP_ID			[[[NSBundle mainBundle] infoDictionary] objectForKey:(NSString*)kCFBundleIdentifierKey]
 
 
 @interface GAEMobileAnalytics()
@@ -54,7 +50,8 @@
 @end
 
 @implementation GAEMobileAnalytics
-@synthesize apiKey, secretKey, basicAnalyticsRecordUrl, eventsAnalyticsRecordUrl;
+@synthesize apiKey, secretKey, basicAnalyticsRecordURL, eventsAnalyticsRecordURL;
+@synthesize runDebug;
 
 static GAEMobileAnalytics *defaultLogger = nil;
 
@@ -228,8 +225,8 @@ static GAEMobileAnalytics *defaultLogger = nil;
 - (void)dealloc {
 	[apiKey release];
 	[secretKey release];
-	[basicAnalyticsRecordUrl release];
-	[eventsAnalyticsRecordUrl release];
+	[basicAnalyticsRecordURL release];
+	[eventsAnalyticsRecordURL release];
 	[super dealloc];
 }
 
@@ -247,16 +244,17 @@ static GAEMobileAnalytics *defaultLogger = nil;
 	if (self = [super init]) 
 	{
 		self.apiKey = _apiKey;
-		self.basicAnalyticsRecordUrl = baseUrl;
-		self.eventsAnalyticsRecordUrl = eventsUrl;
+		self.basicAnalyticsRecordURL = baseUrl;
+		self.eventsAnalyticsRecordURL = eventsUrl;
+		self.runDebug = NO;
 		
 		if (baseUrl == nil)
-			self.basicAnalyticsRecordUrl = BaseURL;
+			self.basicAnalyticsRecordURL = GAEMA_BaseURL;
 		
 		if (eventsUrl == nil)
-			self.eventsAnalyticsRecordUrl = BaseEventsURL;
+			self.eventsAnalyticsRecordURL = GAEMA_BaseEventsURL;
 		
-		[self postToUrl:self.basicAnalyticsRecordUrl parameters:nil];
+		[self postToUrl:self.basicAnalyticsRecordURL parameters:nil];
 	}
 	return self;
 }
@@ -275,7 +273,7 @@ static GAEMobileAnalytics *defaultLogger = nil;
 		
 		[post_parameters setObject:jsonString forKey:@"parameters"];
 	}
-	[self postToUrl:self.eventsAnalyticsRecordUrl parameters:post_parameters];
+	[self postToUrl:self.eventsAnalyticsRecordURL parameters:post_parameters];
 }
 
 - (void)postToUrl:(NSString*)baseUrl parameters:(NSMutableDictionary*)parameters
@@ -304,7 +302,6 @@ static GAEMobileAnalytics *defaultLogger = nil;
 	[parameters setObject:self.secretKey forKey:@"s"];
 
 	// Device
-	[parameters setObject:[device uniqueIdentifier] forKey:@"device_id"];
 	[parameters setObject:[NSString stringWithFormat:@"%d",[[NSNumber numberWithBool:[self isDeviceJailbroken]] intValue]] forKey:@"device_jb"];
 #if TARGET_IPHONE_SIMULATOR	
 	[parameters setObject:@"SIMULATOR" forKey:@"os"];
@@ -313,15 +310,14 @@ static GAEMobileAnalytics *defaultLogger = nil;
 #endif
 	[parameters setObject:[device systemVersion] forKey:@"os_ver"];
 	
-	
+	[parameters setObject:[device uniqueIdentifier] forKey:@"device_id"];
 	[parameters setObject:device_language forKey:@"device_language"];
 	[parameters setObject:locale_country forKey:@"locale_country"];
 	[parameters setObject:[locale objectForKey:NSLocaleCountryCode] forKey:@"device_country"];
 	[parameters setObject:[self getDeviceModel] forKey:@"device_model"];
-
-	[parameters setObject:@"Apple" forKey:@"manufacturer"];
 	[parameters setObject:[self availableMemory] forKey:@"device_memory"];
 	[parameters setObject:[self modelSizeString] forKey:@"device_size"];
+	[parameters setObject:@"Apple" forKey:@"manufacturer"];
 	
 	CTTelephonyNetworkInfo *telephony = [[[CTTelephonyNetworkInfo alloc] init] autorelease];
 	CTCarrier *carrier = [telephony subscriberCellularProvider];
@@ -332,15 +328,17 @@ static GAEMobileAnalytics *defaultLogger = nil;
 	[parameters setObject:carrierName forKey:@"telco"];
 	
 	// App
-	[parameters setObject:GAM_APP_ID forKey:@"app_id"];
-	[parameters setObject:GAM_APP_VER forKey:@"app_ver"];
-	[parameters setObject:GAM_APP_NAME forKey:@"app_name"];
+	[parameters setObject:GAEMA_APP_ID forKey:@"app_id"];
+	[parameters setObject:GAEMA_APP_VER forKey:@"app_ver"];
+	[parameters setObject:GAEMA_APP_NAME forKey:@"app_name"];
 
-	
-	NSLog(@"parameter = %@", parameters);
-//	NSHost* myhost =[NSHost currentHost];
-//	NSString *ad = [myhost address];
-//	NSLog(@"address = %@", ad);
+	if (self.runDebug) {
+		NSLog(@"parameter = %@", parameters);
+		//	NSHost* myhost =[NSHost currentHost];
+		//	NSString *ad = [myhost address];
+		//	NSLog(@"address = %@", ad);
+	}
+
 	
 	NSMutableURLRequest *request = [[[NSMutableURLRequest alloc] initWithURL:[NSURL URLWithString:baseUrl]
 																 cachePolicy:NSURLRequestReloadIgnoringLocalAndRemoteCacheData

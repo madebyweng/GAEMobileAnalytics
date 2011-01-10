@@ -13,6 +13,18 @@
 		1DF5F4E00D08C38300B7A737 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1DF5F4DF0D08C38300B7A737 /* UIKit.framework */; };
 		288765FD0DF74451002DB57D /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 288765FC0DF74451002DB57D /* CoreGraphics.framework */; };
 		28AD733F0D9D9553002E5188 /* MainWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 28AD733E0D9D9553002E5188 /* MainWindow.xib */; };
+		4A35A56912DA2964003C7132 /* GAEMobileAnalytics.m in Sources */ = {isa = PBXBuildFile; fileRef = F8A710C412B9AEA100E16B82 /* GAEMobileAnalytics.m */; };
+		4A35A57712DA2A62003C7132 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1D30AB110D05D00D00671497 /* Foundation.framework */; };
+		4A35A57812DA2A6B003C7132 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 288765FC0DF74451002DB57D /* CoreGraphics.framework */; };
+		4A35A57912DA2A70003C7132 /* CoreTelephony.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F8D594CE12B9D1A800612254 /* CoreTelephony.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+		4A35A57A12DA2AD1003C7132 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1DF5F4DF0D08C38300B7A737 /* UIKit.framework */; };
+		4A35A65612DA2E4B003C7132 /* NSObject+SBJSON.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D594EF12B9D32400612254 /* NSObject+SBJSON.m */; };
+		4A35A65712DA2E4B003C7132 /* NSString+SBJSON.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D594F112B9D32500612254 /* NSString+SBJSON.m */; };
+		4A35A65812DA2E4B003C7132 /* SBJSON.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D594F312B9D32500612254 /* SBJSON.m */; };
+		4A35A65912DA2E4B003C7132 /* SBJsonBase.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D594F512B9D32500612254 /* SBJsonBase.m */; };
+		4A35A65A12DA2E4B003C7132 /* SBJsonParser.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D594F712B9D32500612254 /* SBJsonParser.m */; };
+		4A35A65B12DA2E4B003C7132 /* SBJsonWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D594F912B9D32500612254 /* SBJsonWriter.m */; };
+		4AF1058912DB093700538E47 /* GAEMobileAnalytics.h in Copy Static Library Headers */ = {isa = PBXBuildFile; fileRef = F8A710C312B9AEA100E16B82 /* GAEMobileAnalytics.h */; };
 		F8A710C512B9AEA100E16B82 /* GAEMobileAnalytics.m in Sources */ = {isa = PBXBuildFile; fileRef = F8A710C412B9AEA100E16B82 /* GAEMobileAnalytics.m */; };
 		F8D594CF12B9D1A800612254 /* CoreTelephony.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F8D594CE12B9D1A800612254 /* CoreTelephony.framework */; };
 		F8D594FA12B9D32500612254 /* NSObject+SBJSON.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D594EF12B9D32400612254 /* NSObject+SBJSON.m */; };
@@ -22,6 +34,20 @@
 		F8D594FE12B9D32500612254 /* SBJsonParser.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D594F712B9D32500612254 /* SBJsonParser.m */; };
 		F8D594FF12B9D32500612254 /* SBJsonWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = F8D594F912B9D32500612254 /* SBJsonWriter.m */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		4AF1057B12DB086F00538E47 /* Copy Static Library Headers */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = Headers;
+			dstSubfolderSpec = 16;
+			files = (
+				4AF1058912DB093700538E47 /* GAEMobileAnalytics.h in Copy Static Library Headers */,
+			);
+			name = "Copy Static Library Headers";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		1D30AB110D05D00D00671497 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -33,6 +59,8 @@
 		28AD733E0D9D9553002E5188 /* MainWindow.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = MainWindow.xib; sourceTree = "<group>"; };
 		29B97316FDCFA39411CA2CEA /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		32CA4F630368D1EE00C91783 /* gaemobileanalytics_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gaemobileanalytics_Prefix.pch; sourceTree = "<group>"; };
+		4A35A56012DA2853003C7132 /* libGAEMobleAnalytics.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libGAEMobleAnalytics.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		4AF105AD12DB0BA400538E47 /* GAEMAConstants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GAEMAConstants.h; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* gaemobileanalytics-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "gaemobileanalytics-Info.plist"; plistStructureDefinitionIdentifier = "com.apple.xcode.plist.structure-definition.iphone.info-plist"; sourceTree = "<group>"; };
 		F8A710C312B9AEA100E16B82 /* GAEMobileAnalytics.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GAEMobileAnalytics.h; sourceTree = "<group>"; };
 		F8A710C412B9AEA100E16B82 /* GAEMobileAnalytics.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GAEMobileAnalytics.m; sourceTree = "<group>"; };
@@ -64,12 +92,24 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		4A35A55E12DA2852003C7132 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4A35A57712DA2A62003C7132 /* Foundation.framework in Frameworks */,
+				4A35A57812DA2A6B003C7132 /* CoreGraphics.framework in Frameworks */,
+				4A35A57912DA2A70003C7132 /* CoreTelephony.framework in Frameworks */,
+				4A35A57A12DA2AD1003C7132 /* UIKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		080E96DDFE201D6D7F000001 /* Classes */ = {
 			isa = PBXGroup;
 			children = (
+				4AF105AD12DB0BA400538E47 /* GAEMAConstants.h */,
 				1D3623240D0F684500981E51 /* gaemobileanalyticsAppDelegate.h */,
 				1D3623250D0F684500981E51 /* gaemobileanalyticsAppDelegate.m */,
 				F8A710C312B9AEA100E16B82 /* GAEMobileAnalytics.h */,
@@ -82,6 +122,7 @@
 			isa = PBXGroup;
 			children = (
 				1D6058910D05DD3D006BFB54 /* gaemobileanalytics.app */,
+				4A35A56012DA2853003C7132 /* libGAEMobleAnalytics.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -168,6 +209,23 @@
 			productReference = 1D6058910D05DD3D006BFB54 /* gaemobileanalytics.app */;
 			productType = "com.apple.product-type.application";
 		};
+		4A35A55F12DA2852003C7132 /* GAEMobleAnalyticsLib */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4A35A56412DA2859003C7132 /* Build configuration list for PBXNativeTarget "GAEMobleAnalyticsLib" */;
+			buildPhases = (
+				4AF1057B12DB086F00538E47 /* Copy Static Library Headers */,
+				4A35A55D12DA2852003C7132 /* Sources */,
+				4A35A55E12DA2852003C7132 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = GAEMobleAnalyticsLib;
+			productName = libGaeMobleAnalytics;
+			productReference = 4A35A56012DA2853003C7132 /* libGAEMobleAnalytics.a */;
+			productType = "com.apple.product-type.library.static";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -188,6 +246,7 @@
 			projectRoot = "";
 			targets = (
 				1D6058900D05DD3D006BFB54 /* gaemobileanalytics */,
+				4A35A55F12DA2852003C7132 /* GAEMobleAnalyticsLib */,
 			);
 		};
 /* End PBXProject section */
@@ -220,6 +279,20 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		4A35A55D12DA2852003C7132 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4A35A65612DA2E4B003C7132 /* NSObject+SBJSON.m in Sources */,
+				4A35A65712DA2E4B003C7132 /* NSString+SBJSON.m in Sources */,
+				4A35A65812DA2E4B003C7132 /* SBJSON.m in Sources */,
+				4A35A65912DA2E4B003C7132 /* SBJsonBase.m in Sources */,
+				4A35A65A12DA2E4B003C7132 /* SBJsonParser.m in Sources */,
+				4A35A65B12DA2E4B003C7132 /* SBJsonWriter.m in Sources */,
+				4A35A56912DA2964003C7132 /* GAEMobileAnalytics.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
@@ -247,6 +320,35 @@
 				INFOPLIST_FILE = "gaemobileanalytics-Info.plist";
 				PRODUCT_NAME = gaemobileanalytics;
 				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		4A35A56112DA2854003C7132 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				IPHONEOS_DEPLOYMENT_TARGET = 3.0;
+				PREBINDING = NO;
+				PRODUCT_NAME = GAEMobleAnalytics;
+				SDKROOT = iphoneos;
+			};
+			name = Debug;
+		};
+		4A35A56212DA2854003C7132 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				IPHONEOS_DEPLOYMENT_TARGET = 3.0;
+				PREBINDING = NO;
+				PRODUCT_NAME = GAEMobleAnalytics;
+				SDKROOT = iphoneos;
+				ZERO_LINK = NO;
 			};
 			name = Release;
 		};
@@ -285,6 +387,15 @@
 			buildConfigurations = (
 				1D6058940D05DD3E006BFB54 /* Debug */,
 				1D6058950D05DD3E006BFB54 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		4A35A56412DA2859003C7132 /* Build configuration list for PBXNativeTarget "GAEMobleAnalyticsLib" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4A35A56112DA2854003C7132 /* Debug */,
+				4A35A56212DA2854003C7132 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
