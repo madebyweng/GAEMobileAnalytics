@@ -616,7 +616,7 @@ class DisplayAnalytics(object):
 		return data
 
 class RecordAnalytics(object):
-	def __init__(self, device_id, os, os_ver, app_ver, app_id, request, time=None, secret_key=None):
+	def __init__(self, request, time=None, secret_key=None):
 		self.os = request.get("os")
 		self.os_ver = request.get("os_ver")
 		self.app_id = request.get("app_id")
